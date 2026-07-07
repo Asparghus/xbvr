@@ -1,7 +1,7 @@
-name: Manual Release
+name: Build XBVR Binaries
 
 on:
-  # This allows you to trigger the workflow manually from the GitHub UI
+  # Trigger manually from the GitHub UI
   workflow_dispatch:
     inputs:
       version:
@@ -9,17 +9,21 @@ on:
         required: true
         type: string
 
+permissions:
+  contents: write 
+
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
-    
-    # Required permission for GitHub Actions to create a release on your page
-    permissions:
-      contents: write 
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '>=1.21.0' # Ensures the runner has Go installed
 
       - name: Build UI
         run: |
@@ -27,15 +31,27 @@ jobs:
           yarn install --ignore-engines
           yarn build
 
-      - name: Package UI
-        run: |
-          cd ui
-          zip -r ../ui-bundle-${{ inputs.version }}.zip dist/
+      - name: Build Windows Binary (.exe)
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        # Compiles the Go code into a Windows executable
+        run: go build -ldflags="-s -w" -o xbvr-windows-amd64.exe
+
+      - name: Build Linux Binary
+        env:
+          GOOS: linux
+          GOARCH: amd64
+        # Compiles the Go code into a Linux binary
+        run: go build -ldflags="-s -w" -o xbvr-linux-amd64
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.version }}
           name: Release ${{ inputs.version }}
-          files: ui-bundle-${{ inputs.version }}.zip
+          # Attaches both binaries to the release page
+          files: |
+            xbvr-windows-amd64.exe
+            xbvr-linux-amd64
           generate_release_notes: true
