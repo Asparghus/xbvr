@@ -225,7 +225,7 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 			if e.Request.URL.RawQuery == "videoPage="+strconv.Itoa(page) && !limitScraping {
 				// found scenes on this page, get the next page of results
 				page++
-				siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
+				siteCollector.Visit(fmt.Sprintf("%svideos/?Page=%v", URL, page))
 			}
 			sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
@@ -239,7 +239,7 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit(fmt.Sprintf("%s?videoPage=%v", URL, page))
+		siteCollector.Visit(fmt.Sprintf("%svideos/?Page=%v", URL, page))
 	}
 
 	if updateSite {
