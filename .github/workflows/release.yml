@@ -29,10 +29,8 @@ jobs:
 
       - name: Package UI
         run: |
-          # Zips the built UI so it can be attached to the release.
-          # NOTE: Change 'build' to 'dist' if your framework outputs there.
           cd ui
-          zip -r ../ui-bundle-${{ inputs.version }}.zip build/
+          zip -r ../ui-bundle-${{ inputs.version }}.zip dist/
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
