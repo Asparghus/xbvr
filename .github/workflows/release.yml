@@ -1,39 +1,43 @@
-name: release
+name: Manual Release
 
 on:
-  push:
-    tags:
-      - "*"
+  # This allows you to trigger the workflow manually from the GitHub UI
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag for this release (e.g., v1.0.0)'
+        required: true
+        type: string
 
 jobs:
-
-  release:
-
+  build-and-release:
     runs-on: ubuntu-latest
-
-    env:
-      DOCKER_CLI_EXPERIMENTAL: "enabled"
+    
+    # Required permission for GitHub Actions to create a release on your page
+    permissions:
+      contents: write 
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
-        with:
-          submodules: 'true'
-          fetch-depth: 0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
+        uses: actions/checkout@v4
 
       - name: Build UI
-        run:  cd ui && yarn install --ignore-engines && yarn build
+        run: |
+          cd ui
+          yarn install --ignore-engines
+          yarn build
 
-      - name: Setup release environment
-        run: |-
-          echo 'GITHUB_TOKEN=${{secrets.GORELEASER_ACCESS_TOKEN}}' > .release-env
-          echo 'GITHUB_USER=${{github.event.repository.owner.login}}' >> .release-env
-          echo 'GITHUB_PROJECT=${{github.event.repository.name}}' >> .release-env
-          echo 'DOCKER_CREDS_FILE=.docker-creds' >> .release-env
-          echo '${{github.event.repository.owner.login}}:${{secrets.GORELEASER_ACCESS_TOKEN}}:ghcr.io' >> .docker-creds
+      - name: Package UI
+        run: |
+          # Zips the built UI so it can be attached to the release.
+          # NOTE: Change 'build' to 'dist' if your framework outputs there.
+          cd ui
+          zip -r ../ui-bundle-${{ inputs.version }}.zip build/
 
-      - name: Release publish
-        run: make release
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.version }}
+          name: Release ${{ inputs.version }}
+          files: ui-bundle-${{ inputs.version }}.zip
+          generate_release_notes: true
