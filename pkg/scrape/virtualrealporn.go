@@ -222,10 +222,10 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 
 	siteCollector.OnHTML(`div.videoListContainer.paginated`, func(e *colly.HTMLElement) {
 		e.ForEach(`a.w-portfolio-item-anchor`, func(id int, e *colly.HTMLElement) {
-			if e.Request.URL.RawQuery == "videoPage="+strconv.Itoa(page) && !limitScraping {
+			if e.Request.URL.RawQuery == "videos/?page="+strconv.Itoa(page) && !limitScraping {
 				// found scenes on this page, get the next page of results
 				page++
-				siteCollector.Visit(fmt.Sprintf("%svideos/?Page=%v", URL, page))
+				siteCollector.Visit(fmt.Sprintf("%svideos/?page=%v", URL, page))
 			}
 			sceneURL := strings.Split(e.Request.AbsoluteURL(e.Attr("href")), "?")[0]
 
@@ -239,7 +239,7 @@ func VirtualRealPornSite(wg *models.ScrapeWG, updateSite bool, knownScenes []str
 	if singleSceneURL != "" {
 		sceneCollector.Visit(singleSceneURL)
 	} else {
-		siteCollector.Visit(fmt.Sprintf("%svideos/?Page=%v", URL, page))
+		siteCollector.Visit(fmt.Sprintf("%svideos/?page=%v", URL, page))
 	}
 
 	if updateSite {
